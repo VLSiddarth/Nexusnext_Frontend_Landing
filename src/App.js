@@ -534,7 +534,10 @@ const CtaSection = () => {
     setMessage("");
 
     try {
-      const response = await fetch("http://localhost:3001/api/waitlist", {
+      // Use the environment variable to get the backend URL
+      const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
+      const response = await fetch(`${backendUrl}/api/waitlist`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
