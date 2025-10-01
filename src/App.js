@@ -219,24 +219,29 @@ const SphereGridScene = React.memo(({ quality, scrollProgress }) => {
     </div>
   );
 });
-
-// DNA Scene
+// DNA Scene - FIXED VERSION
 const DnaSceneComponent = React.memo(({ scrollProgress }) => {
   const mountRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  
   useEffect(() => {
     let mounted = true;
+    
     const loadDnaScene = async () => {
       try {
         const THREE = await import('three');
         if (!mounted) return;
+        
         const mount = mountRef.current;
         if (!mount) return;
+        
         const width = mount.clientWidth;
         const height = mount.clientHeight;
+        
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
         camera.position.z = 8;
+        
         const renderer = new THREE.WebGLRenderer({
           alpha: true,
           antialias: false,
@@ -246,11 +251,13 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
         renderer.setClearColor(0x0a1323, 0);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         mount.appendChild(renderer.domElement);
+        
         const helixGroup = new THREE.Group();
         const segments = 120;
         const radius = 2.6;
         const strand1Points = [];
         const strand2Points = [];
+        
         for (let i = 0; i < segments; i++) {
           const t = i / (segments - 1);
           const angle = t * Math.PI * 10;
@@ -258,23 +265,27 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
           strand1Points.push(new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius));
           strand2Points.push(new THREE.Vector3(Math.cos(angle + Math.PI) * radius, y, Math.sin(angle + Math.PI) * radius));
         }
+        
         const curve1 = new THREE.CatmullRomCurve3(strand1Points);
         const curve2 = new THREE.CatmullRomCurve3(strand2Points);
         const geo1 = new THREE.TubeGeometry(curve1, segments, 0.08, 6, false);
         const geo2 = new THREE.TubeGeometry(curve2, segments, 0.08, 6, false);
+        
         const mat1 = new THREE.MeshBasicMaterial({
           color: 0x2fd3f7,
           transparent: true,
-          opacity: 0.7 + 0.2 * scrollProgress
+          opacity: 0.7
         });
         const mat2 = new THREE.MeshBasicMaterial({
           color: 0xc084fc,
           transparent: true,
-          opacity: 0.65 + 0.2 * scrollProgress
+          opacity: 0.65
         });
+        
         const strand1 = new THREE.Mesh(geo1, mat1);
         const strand2 = new THREE.Mesh(geo2, mat2);
         helixGroup.add(strand1, strand2);
+        
         for (let i = 0; i < segments; i += 20) {
           const t = i / (segments - 1);
           const angle = t * Math.PI * 10;
@@ -283,7 +294,7 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
           const rungMat = new THREE.MeshBasicMaterial({
             color: 0xffe084,
             transparent: true,
-            opacity: 0.5 + 0.3 * scrollProgress,
+            opacity: 0.5,
           });
           const rung = new THREE.Mesh(rungGeo, rungMat);
           rung.position.y = y;
@@ -291,11 +302,14 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
           rung.rotation.z = Math.PI / 2;
           helixGroup.add(rung);
         }
+        
         scene.add(helixGroup);
+        
         const particleCount = 150;
         const particlesGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
         const colors = new Float32Array(particleCount * 3);
+        
         for (let i = 0; i < particleCount; i++) {
           const i3 = i * 3;
           const rad = 6.5 + Math.random() * 4;
@@ -308,33 +322,54 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
           colors[i3 + 1] = 0.7 + 0.3 * Math.random();
           colors[i3 + 2] = 1.0;
         }
+        
         particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
         particlesGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+        
         const particlesMaterial = new THREE.PointsMaterial({
           size: 0.11,
           transparent: true,
-          opacity: 0.13 + 0.5 * scrollProgress,
+          opacity: 0.4,
           vertexColors: true,
           blending: THREE.AdditiveBlending,
         });
+        
         const particles = new THREE.Points(particlesGeometry, particlesMaterial);
         scene.add(particles);
         scene.add(new THREE.AmbientLight(0xffffff, 0.54));
+        
         let time = 0;
         let animationFrame;
+        let lastScrollProgress = scrollProgress;
+        
         const animate = () => {
           if (!mounted) return;
           animationFrame = requestAnimationFrame(animate);
+          
           time += 0.011;
-          helixGroup.rotation.y = time * 0.35 + 0.033 * scrollProgress;
-          helixGroup.rotation.x = 0.32 * Math.sin(time * 0.32 + 0.15 * scrollProgress);
+          
+          // Smooth rotation with minimal scroll interference
+          helixGroup.rotation.y = time * 0.35;
+          helixGroup.rotation.x = 0.32 * Math.sin(time * 0.32);
+          
+          // Subtle pulse effect
           const pulse = 1.0 + 0.08 * Math.sin(time * 2.5);
           helixGroup.scale.set(pulse, pulse, pulse);
+          
+          // Particle rotation
           particles.rotation.y += 0.003;
-          mat1.opacity = 0.65 + 0.31 * scrollProgress;
-          mat2.opacity = 0.62 + 0.33 * scrollProgress;
+          
+          // Update opacities based on scroll only when it changes
+          if (Math.abs(lastScrollProgress - scrollProgress) > 0.01) {
+            mat1.opacity = 0.65 + 0.25 * scrollProgress;
+            mat2.opacity = 0.62 + 0.28 * scrollProgress;
+            particlesMaterial.opacity = 0.3 + 0.4 * scrollProgress;
+            lastScrollProgress = scrollProgress;
+          }
+          
           renderer.render(scene, camera);
         };
+        
         const onResize = () => {
           if (!mount || !mounted) return;
           const w = mount.clientWidth;
@@ -343,9 +378,11 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
           camera.updateProjectionMatrix();
           renderer.setSize(w, h);
         };
+        
         window.addEventListener("resize", onResize, { passive: true });
         animate();
         setIsLoaded(true);
+        
         return () => {
           mounted = false;
           window.removeEventListener("resize", onResize);
@@ -357,33 +394,40 @@ const DnaSceneComponent = React.memo(({ scrollProgress }) => {
           particlesGeometry.dispose();
           particlesMaterial.dispose();
           renderer.dispose();
-          if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+          if (mount && mount.contains(renderer.domElement)) {
+            mount.removeChild(renderer.domElement);
+          }
         };
       } catch (error) {
         console.error('Failed to load DNA scene:', error);
         setIsLoaded(true);
       }
     };
+    
     loadDnaScene();
+    
     return () => {
       mounted = false;
     };
   }, [scrollProgress]);
+  
   return (
     <div
       ref={mountRef}
       style={{
         width: "100%",
-        height: "90vh",
+        height: "600px",
+        minHeight: "600px",
+        maxHeight: "90vh",
         background: "radial-gradient(circle at center, #181b2e 0%, #0a1323 100%)",
         position: "relative",
+        overflow: "hidden",
       }}
     >
       {!isLoaded && <SceneLoadingFallback />}
     </div>
   );
 });
-
 const AnimatedText = React.memo(({ children, className = "", delay = 0 }) => {
   const [isVisible, setVisible] = useState(false);
   const elementRef = useRef(null);
