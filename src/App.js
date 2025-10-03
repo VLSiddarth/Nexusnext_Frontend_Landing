@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useMemo, Suspense, useCallback } from "react";
 import { FaXTwitter, FaLinkedin, FaInstagram, FaDiscord, FaYoutube } from "react-icons/fa6";
 import * as THREE from 'three';
+import React, { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
 // --- PERFORMANCE HOOKS (Optimized) ---
 const usePerformanceMonitor = () => {
@@ -787,23 +789,31 @@ const handleSubmit = async (e) => {
   setMessage("");
 
   try {
-    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://nexusnext-landing.onrender.com';
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
-    const response = await fetch(`${backendUrl}/api/waitlist`, {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setMessage("Configuration error. Please contact support.");
+      return;
+    }
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/waitlist`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "apikey": supabaseAnonKey,
+        "Authorization": `Bearer ${supabaseAnonKey}`,
+        "Prefer": "return=minimal"
       },
       body: JSON.stringify({ email }),
     });
 
-    const data = await response.json();
-
-    if (response.ok) {
+    if (response.ok || response.status === 201) {
       setMessage("Thanks! You've joined the waitlist.");
       setEmail("");
     } else {
-      setMessage(data.error || "Failed to submit. Please try again.");
+      const data = await response.json();
+      setMessage(data.message || "Failed to submit. Please try again.");
     }
   } catch (error) {
     setMessage("Network error. Please try again later.");
