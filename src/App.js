@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo, Suspense, useCallback } from "react";
 import { FaXTwitter, FaLinkedin, FaInstagram, FaDiscord, FaYoutube } from "react-icons/fa6";
 import * as THREE from 'three';
-import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // --- PERFORMANCE HOOKS (Optimized) ---
