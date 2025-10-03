@@ -779,39 +779,38 @@ const CtaSection = () => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email || !isEmail(email) || isSubmitting) return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!email || !isEmail(email) || isSubmitting) return;
 
-    setIsSubmitting(true);
-    setMessage("");
+  setIsSubmitting(true);
+  setMessage("");
 
-    try {
-      // Use the environment variable to get the backend URL
-      const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  try {
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'https://nexusnext-landing.onrender.com';
 
-      const response = await fetch(`${backendUrl}/api/waitlist`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
+    const response = await fetch(`${backendUrl}/api/waitlist`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok) {
-        setMessage("Thanks! You've joined the waitlist.");
-        setEmail("");
-      } else {
-        setMessage(data.error || "Failed to submit. Please try again.");
-      }
-    } catch (error) {
-      setMessage("Network error. Please try again later.");
-    } finally {
-      setIsSubmitting(false);
+    if (response.ok) {
+      setMessage("Thanks! You've joined the waitlist.");
+      setEmail("");
+    } else {
+      setMessage(data.error || "Failed to submit. Please try again.");
     }
-  };
+  } catch (error) {
+    setMessage("Network error. Please try again later.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <section className="bg-[#151a31] text-center py-20 px-4 select-none">
