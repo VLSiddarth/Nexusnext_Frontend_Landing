@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, Suspense, useCallback } from "react";
 import { FaXTwitter, FaLinkedin, FaInstagram, FaDiscord, FaYoutube } from "react-icons/fa6";
-import * as THREE from 'three';
-import { createClient } from "@supabase/supabase-js";
 
 // --- PERFORMANCE HOOKS (Optimized) ---
 const usePerformanceMonitor = () => {
@@ -672,7 +670,7 @@ const FeatureCards = React.memo(() => {
   const [shiningIdx, setShiningIdx] = useState(null);
   const cards = useMemo(() => [
     { icon: "🔗", title: "Nexus Connect", desc: "Connecting people, ideas, and technology — transforming how we learn,innovate & collaborate" },
-    { icon: "🤖", title: "Nexus AGI", desc: "Advanced general intelligence evolving with you." },
+    { icon: "🤖", title: "Nexus Mind", desc: "Advanced agentic intelligence evolving with you." },
     { icon: "🌐", title: "Nexus Sphere", desc: "Immersive digital worlds unlock limitless possibilities." },
     { icon: "🏪", title: "Nexus Store", desc: "Marketplace for next-gen assets and collaboration." },
   ], []);
@@ -721,7 +719,7 @@ const FeatureCards = React.memo(() => {
 
 const socialLinks = [
   {
-    url: "https://x.com/NEXUSNEXT001?t=TaGToS6fZdczKvwS_a8T9A&s=09",
+    url: "https://x.com/VLSiddarth75725",
     icon: <FaXTwitter />,
     name: "X (Twitter)"
   },
@@ -773,53 +771,26 @@ const VisionSection = React.memo(() => (
 ));
 const CtaSection = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+ 
 
   const isEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
-const handleSubmit = async (e) => {
+const GOOGLE_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdW1SlRCIhuMgKWwTMSEVuhky8jKn3bK6mcIkVNfklyrWFAhQ/viewform";
+
+const handleSubmit = (e) => {
   e.preventDefault();
-  if (!email || !isEmail(email) || isSubmitting) return;
 
-  setIsSubmitting(true);
-  setMessage("");
+  if (!email || !isEmail(email)) return;
 
-  try {
-    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-    const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+  const redirectUrl =
+    `${GOOGLE_FORM_URL}?emailAddress=${encodeURIComponent(email)}`;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setMessage("Configuration error. Please contact support.");
-      return;
-    }
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/waitlist`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": supabaseAnonKey,
-        "Authorization": `Bearer ${supabaseAnonKey}`,
-        "Prefer": "return=minimal"
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (response.ok || response.status === 201) {
-      setMessage("Thanks! You've joined the waitlist.");
-      setEmail("");
-    } else {
-      const data = await response.json();
-      setMessage(data.message || "Failed to submit. Please try again.");
-    }
-  } catch (error) {
-    setMessage("Network error. Please try again later.");
-  } finally {
-    setIsSubmitting(false);
-  }
+  window.location.href = redirectUrl;
 };
+
 
   return (
     <section className="bg-[#151a31] text-center py-20 px-4 select-none">
@@ -838,24 +809,22 @@ const handleSubmit = async (e) => {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={isSubmitting}
           required
           aria-label="Enter your email to join the waitlist"
           className="rounded-full bg-white/10 placeholder-white/60 text-white px-6 py-3 focus:bg-white/20 focus:outline-none border border-white/20 flex-1 disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={isSubmitting || !email || !isEmail(email)}
-          className="rounded-full bg-gradient-to-r from-blue-700 to-purple-700 text-white font-semibold px-8 py-3 hover:scale-105 active:scale-95 shadow-lg transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2
+                    rounded-full bg-gradient-to-r from-blue-700 to-purple-700
+                    text-white font-semibold px-7 py-3
+                    hover:scale-105 active:scale-95
+                    shadow-lg transition-all"
         >
-          {isSubmitting ? "Joining..." : "Join Waitlist"}
+          Join Waitlist
+          <span className="text-lg">→</span>
         </button>
       </form>
-      {message && (
-        <p className={`mt-4 text-sm ${message.includes('Thanks') ? 'text-green-400' : 'text-red-400'}`}>
-          {message}
-        </p>
-      )}
     </section>
   );
 };
